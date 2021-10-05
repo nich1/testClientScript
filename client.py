@@ -1,10 +1,31 @@
 import socket
+import threading
 
-HOST = socket.gethostbyname(socket.gethostname())
-PORT = 9090
+username = input("Choose a username: ")
 
-socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-socket.connect((HOST, PORT))
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect(('10.102.65.94', 9090))
 
-socket.send("Hello World!".encode('utf-8'))
-print(socket.recv(1024).decode('utf-8'))
+def receive():
+    while True:
+        try:
+            message = client.recv(1024).decode('ascii')
+            if message == "NICK":
+                client.send(username.encode('ascii'))
+            else:
+                print(message)
+        except:
+            print("[Disconnected]")
+            client.close()
+            break
+
+def write():
+    while True:
+        message = f'[{username}]: {input("")}'
+        client.send(message.encode('ascii'))
+
+receive_thread = threading.Thread(target=receive)
+receive_thread.start()
+
+write_thread = threading.Thread(target=write)
+write_thread.start()
